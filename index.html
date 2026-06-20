@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Faszien-Flow">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
 <title>Faszien- & Calisthenics-Flow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -215,6 +218,67 @@
     margin-bottom:6px;
   }
 
+  .top-bar{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position: relative;
+    margin-bottom: 6px;
+  }
+  .exit-link{
+    position: absolute;
+    right: 0;
+    top: -2px;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', -apple-system, sans-serif;
+    cursor: pointer;
+    padding: 6px 4px;
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    text-underline-offset: 3px;
+  }
+  .exit-link:active{ opacity: 0.6; }
+
+  .confirm-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(46,42,36,0.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+    z-index: 20;
+  }
+  .confirm-box{
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 24px 22px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+  }
+  .confirm-box h3{
+    font-family:'Fraunces', Georgia, serif;
+    font-size: 19px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .confirm-box p{
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .confirm-actions{
+    display:flex;
+    gap: 10px;
+  }
+  .confirm-actions .ctrl-btn{ flex:1; }
+
   .exercise-card{
     background: rgba(255,255,255,0.6);
     border: 1px solid var(--line);
@@ -411,6 +475,16 @@
   @media (prefers-reduced-motion: reduce){
     *{ transition: none !important; animation: none !important; }
   }
+
+  .footer{
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
 </style>
 </head>
 <body>
@@ -453,7 +527,10 @@
   <!-- PREP / TRANSITION (30 Sekunden Vorbereitung vor jeder Übung) -->
   <div class="screen hidden" id="screen-prep">
     <div class="progress-track" id="progress-track-prep"></div>
-    <div class="phase-tag" id="phase-tag-prep">Vorbereitung</div>
+    <div class="top-bar">
+      <div class="phase-tag" id="phase-tag-prep">Vorbereitung</div>
+      <button class="exit-link" id="btn-exit-prep" type="button">Beenden</button>
+    </div>
 
     <div class="exercise-card prep-card">
       <div class="prep-eyebrow">Bereite dich vor auf</div>
@@ -494,7 +571,10 @@
   <!-- WORKOUT -->
   <div class="screen hidden" id="screen-workout">
     <div class="progress-track" id="progress-track"></div>
-    <div class="phase-tag" id="phase-tag">Phase</div>
+    <div class="top-bar">
+      <div class="phase-tag" id="phase-tag">Phase</div>
+      <button class="exit-link" id="btn-exit-workout" type="button">Beenden</button>
+    </div>
 
     <div class="exercise-card">
       <div class="illustration" id="illustration"></div>
@@ -549,6 +629,20 @@
       <button class="start-btn" id="btn-restart" style="max-width:260px; margin:0 auto;" type="button">Noch einmal</button>
     </div>
   </div>
+
+  <!-- EXIT CONFIRMATION OVERLAY -->
+  <div class="confirm-overlay hidden" id="confirm-overlay">
+    <div class="confirm-box">
+      <h3>Training beenden?</h3>
+      <p>Dein Fortschritt geht verloren. Du kannst jederzeit neu starten.</p>
+      <div class="confirm-actions">
+        <button class="ctrl-btn ctrl-secondary" id="btn-exit-cancel" type="button">Weiter trainieren</button>
+        <button class="ctrl-btn ctrl-primary" id="btn-exit-confirm" type="button">Beenden</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">© MCB – creative arts &amp; health</div>
 
 </div>
 
@@ -707,7 +801,13 @@ var el = {
   pauseBtnPrep: document.getElementById('btn-prep-pause'),
   skipBtnPrep: document.getElementById('btn-prep-skip'),
   listenBtnPrep: document.getElementById('btn-listen-prep'),
-  listenLabelPrep: document.getElementById('listen-label-prep')
+  listenLabelPrep: document.getElementById('listen-label-prep'),
+  // exit confirmation
+  exitOverlay: document.getElementById('confirm-overlay'),
+  exitBtnWorkout: document.getElementById('btn-exit-workout'),
+  exitBtnPrep: document.getElementById('btn-exit-prep'),
+  exitCancel: document.getElementById('btn-exit-cancel'),
+  exitConfirm: document.getElementById('btn-exit-confirm')
 };
 
 /* ---------- AUDIO (Web Audio API, iOS-safe) ---------- */
@@ -1022,6 +1122,28 @@ function restart(){
   el.overview.classList.remove('hidden');
 }
 
+/* ---------- Vorzeitig beenden ---------- */
+var wasPausedBeforeExitDialog = false;
+function openExitConfirm(){
+  wasPausedBeforeExitDialog = paused;
+  paused = true; // Timer während des Dialogs anhalten
+  stopSpeaking();
+  el.exitOverlay.classList.remove('hidden');
+}
+function closeExitConfirm(resume){
+  el.exitOverlay.classList.add('hidden');
+  if(resume){ paused = wasPausedBeforeExitDialog; }
+}
+function confirmExit(){
+  cancelTimer();
+  stopSpeaking();
+  el.exitOverlay.classList.add('hidden');
+  el.workout.classList.add('hidden');
+  el.prep.classList.add('hidden');
+  el.done.classList.add('hidden');
+  el.overview.classList.remove('hidden');
+}
+
 el.soundCheckbox.addEventListener('change', function(){
   soundEnabled = el.soundCheckbox.checked;
   ensureAudioCtx();
@@ -1042,6 +1164,11 @@ el.skipBtnPrep.addEventListener('click', function(){
 });
 el.pauseBtnPrep.addEventListener('click', function(){ ensureAudioCtx(); togglePause(); });
 el.listenBtnPrep.addEventListener('click', function(){ ensureAudioCtx(); speakHowto(el.listenBtnPrep, el.listenLabelPrep, steps[currentStep]); });
+
+el.exitBtnWorkout.addEventListener('click', openExitConfirm);
+el.exitBtnPrep.addEventListener('click', openExitConfirm);
+el.exitCancel.addEventListener('click', function(){ closeExitConfirm(true); });
+el.exitConfirm.addEventListener('click', confirmExit);
 
 // Pause timer correctly when tab/app goes to background, resume cleanly
 document.addEventListener('visibilitychange', function(){
