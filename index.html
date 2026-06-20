@@ -186,6 +186,28 @@
   .start-btn:active{ transform: translateY(0) scale(0.98); }
   .start-btn:focus-visible{ outline: 3px solid var(--moss); outline-offset: 2px; }
 
+  .share-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    margin-top: 12px;
+    padding: 13px;
+    background: transparent;
+    color: var(--moss);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    font-family:'Inter', -apple-system, sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .share-btn svg{ width:16px; height:16px; flex-shrink:0; }
+  .share-btn:active{ transform: scale(0.98); background: rgba(92,110,79,0.08); }
+  .share-btn.copied{ color: white; background: var(--moss); border-color: var(--moss); }
+
   /* --- WORKOUT SCREEN --- */
   .progress-track{
     display:flex;
@@ -566,6 +588,10 @@
     </div>
 
     <button class="start-btn" id="btn-start">Training starten</button>
+    <button class="share-btn" id="btn-share" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      <span id="share-label">Weiterempfehlen</span>
+    </button>
   </div>
 
   <!-- PREP / TRANSITION (30 Sekunden Vorbereitung vor jeder Übung) -->
@@ -831,6 +857,7 @@ var el = {
   secs: document.getElementById('timer-secs'),
   ring: document.getElementById('ring-fg'),
   pauseBtn: document.getElementById('btn-pause'),
+  prevBtn: document.getElementById('btn-prev'),
   upNext: document.getElementById('up-next'),
   listenBtn: document.getElementById('btn-listen'),
   listenLabel: document.getElementById('listen-label'),
@@ -964,6 +991,8 @@ function loadStep(idx){
   var step = steps[idx];
   remaining = step.time;
   beepedThisSecond = {};
+
+  el.prevBtn.classList.toggle('hidden', idx === 0);
 
   el.phaseTag.textContent = 'Phase ' + (step.phaseIdx+1) + ' · ' + step.phaseName;
   el.illustration.innerHTML = ICONS[step.icon] || '';
@@ -1179,9 +1208,14 @@ function startWorkout(){
   currentStep = 0;
   el.overview.classList.add('hidden');
   el.done.classList.add('hidden');
-  el.prep.classList.add('hidden');
-  el.workout.classList.remove('hidden');
-  loadStep(0);
+  if(prepEnabled){
+    el.workout.classList.add('hidden');
+    enterPrepStep(0);
+  } else {
+    el.prep.classList.add('hidden');
+    el.workout.classList.remove('hidden');
+    loadStep(0);
+  }
 }
 function restart(){
   el.done.classList.add('hidden');
@@ -1219,6 +1253,69 @@ el.prepCheckbox.addEventListener('change', function(){
 });
 
 document.getElementById('btn-start').addEventListener('click', startWorkout);
+
+document.getElementById('btn-share').addEventListener('click', function(){
+  var btn = this;
+  var label = document.getElementById('share-label');
+  var url = window.location.href;
+  var shareText = 'Faszien- & Calisthenics-Flow – 7–12 Minuten täglich für mehr Beweglichkeit und Energie:';
+  var isValidUrl = /^https?:\/\//i.test(url);
+
+  function showTempLabel(text, duration){
+    var prevLabel = label.textContent;
+    label.textContent = text;
+    setTimeout(function(){
+      btn.classList.remove('copied');
+      label.textContent = prevLabel;
+    }, duration || 2200);
+  }
+
+  function showCopiedFeedback(){
+    btn.classList.add('copied');
+    showTempLabel('Link kopiert!');
+  }
+
+  // Sicherheitsprüfung: in Vorschau-/Sandbox-Umgebungen (z.B. about:srcdoc) gibt es
+  // keine echte, teilbare Adresse. Lieber ehrlich darauf hinweisen als einen falschen Link verschicken.
+  if(!isValidUrl){
+    btn.classList.add('copied');
+    showTempLabel('Bitte über den echten Link öffnen', 3200);
+    return;
+  }
+
+  // Bevorzugt: native Teilen-Funktion (öffnet auf iPhone direkt SMS/Mail/WhatsApp-Auswahl)
+  if(navigator.share){
+    navigator.share({ title: 'Faszien- & Calisthenics-Flow', text: shareText, url: url }).catch(function(){
+      // Nutzer hat Teilen abgebrochen oder Fehler — kein weiteres Feedback nötig
+    });
+    return;
+  }
+
+  // Fallback: Link in die Zwischenablage kopieren
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(showCopiedFeedback).catch(function(){
+      promptFallbackCopy(url);
+    });
+  } else {
+    promptFallbackCopy(url);
+  }
+
+  function promptFallbackCopy(text){
+    var tempInput = document.createElement('textarea');
+    tempInput.value = text;
+    tempInput.style.position = 'fixed';
+    tempInput.style.opacity = '0';
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try{
+      document.execCommand('copy');
+      showCopiedFeedback();
+    } catch(e){
+      alert('Link zum Teilen: ' + text);
+    }
+    document.body.removeChild(tempInput);
+  }
+});
 document.getElementById('btn-restart').addEventListener('click', restart);
 document.getElementById('btn-next').addEventListener('click', function(){ ensureAudioCtx(); goNext(); });
 document.getElementById('btn-prev').addEventListener('click', function(){ ensureAudioCtx(); goPrev(); });
