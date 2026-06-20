@@ -324,14 +324,46 @@
   }
 
   .side-label{
-    display:inline-block;
-    font-size: 12px;
-    font-weight:600;
-    color: var(--clay);
-    background: rgba(201,123,74,0.12);
-    padding: 3px 10px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size: 14px;
+    font-weight:700;
+    color: white;
+    background: var(--clay);
+    padding: 6px 16px;
     border-radius: 20px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 3px 10px rgba(201,123,74,0.35);
+  }
+
+  .set-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    font-size: 14px;
+    font-weight:700;
+    color: white;
+    background: var(--moss);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 3px 10px rgba(92,110,79,0.35);
+  }
+  .set-dots{
+    display:inline-flex;
+    gap: 4px;
+  }
+  .set-dots span{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+  }
+  .set-dots span.active{
+    background: white;
   }
 
   /* Movement how-to box */
@@ -691,7 +723,7 @@ var phases = [
     items: [
       { name:"Dead Bug", desc:"Tiefer Core, Anti-Rotation.", time:20, sets:3, icon:"deadbug",
         howto:"Lege dich auf den Rücken, Arme zeigen zur Decke, Knie im rechten Winkel über der Hüfte. Strecke einen Arm und das gegenüberliegende Bein langsam aus, ohne dass der untere Rücken sich vom Boden hebt. Führe beide zurück und wechsle die Seite." },
-      { name:"Seitstütz Knievariante", desc:"Schräge Bauchmuskeln & laterale Faszien.", time:25, icon:"sideplank", sides:2,
+      { name:"Seitstütz Knievariante", desc:"Schräge Bauchmuskeln & laterale Faszien.", time:30, icon:"sideplank", sides:2,
         howto:"Lege dich auf die Seite, stütze dich auf den Unterarm, die Knie sind angewinkelt. Hebe die Hüfte vom Boden, sodass Schulter, Hüfte und Knie eine gerade Linie bilden. Halte die Position ruhig und atme gleichmäßig. Dann die Seite wechseln." },
       { name:"Glute Bridge", desc:"Hüftbeuger öffnen, Gesäß aktivieren.", time:30, icon:"glutebridge",
         howto:"Lege dich auf den Rücken, Füße hüftbreit aufgestellt, nah am Gesäß. Drücke die Fersen in den Boden und hebe die Hüfte nach oben, bis Oberkörper und Oberschenkel eine Linie bilden. Spanne dabei das Gesäß an. Senke die Hüfte langsam wieder ab." }
@@ -721,11 +753,11 @@ phases.forEach(function(phase, pIdx){
   phase.items.forEach(function(item){
     if(item.sides){
       for(var s=1; s<=item.sides; s++){
-        steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel: s===1?"Seite 1":"Seite 2"}));
+        steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel: s===1?"links":"rechts"}));
       }
     } else if(item.sets){
       for(var s2=1; s2<=item.sets; s2++){
-        steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel: "Satz " + s2 + " / " + item.sets}));
+        steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel: "Satz " + s2 + " / " + item.sets, setNum:s2, setTotal:item.sets}));
       }
     } else {
       steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel:null}));
@@ -898,6 +930,17 @@ function speakHowto(btn, label, step){
   label.textContent = 'Stopp';
 }
 
+function renderSideOrSetBadge(step){
+  if(step.sideLabel && step.sideLabel.indexOf('Satz') === 0 && step.setNum && step.setTotal){
+    var dots = '';
+    for(var i=1; i<=step.setTotal; i++){
+      dots += '<span' + (i <= step.setNum ? ' class="active"' : '') + '></span>';
+    }
+    return '<span class="set-badge">Satz ' + step.setNum + ' / ' + step.setTotal + '<span class="set-dots">' + dots + '</span></span>';
+  }
+  return '';
+}
+
 /* ---------- Step loading (Übungsphase) ---------- */
 function loadStep(idx){
   cancelTimer();
@@ -910,10 +953,12 @@ function loadStep(idx){
 
   el.phaseTag.textContent = 'Phase ' + (step.phaseIdx+1) + ' · ' + step.phaseName;
   el.illustration.innerHTML = ICONS[step.icon] || '';
-  el.name.textContent = step.name;
+  el.name.textContent = step.sideLabel && (step.sideLabel === 'links' || step.sideLabel === 'rechts')
+    ? step.name + ' (' + step.sideLabel + ')'
+    : step.name;
   el.desc.textContent = step.desc;
   el.howtoText.textContent = step.howto;
-  el.sideWrap.innerHTML = step.sideLabel ? '<span class="side-label">' + step.sideLabel + '</span>' : '';
+  el.sideWrap.innerHTML = renderSideOrSetBadge(step);
   el.secs.textContent = remaining;
   el.secs.classList.remove('urgent');
   el.ring.classList.remove('urgent');
@@ -924,7 +969,8 @@ function loadStep(idx){
   // up next text
   if(idx+1 < steps.length){
     var next = steps[idx+1];
-    el.upNext.innerHTML = 'Als Nächstes: <b>' + next.name + '</b>' + (next.sideLabel ? ' · ' + next.sideLabel : '');
+    var nextLabel = (next.sideLabel === 'links' || next.sideLabel === 'rechts') ? ' (' + next.sideLabel + ')' : (next.sideLabel ? ' · ' + next.sideLabel : '');
+    el.upNext.innerHTML = 'Als Nächstes: <b>' + next.name + nextLabel + '</b>';
   } else {
     el.upNext.innerHTML = 'Letzte Übung — danach bist du fertig.';
   }
@@ -1064,9 +1110,11 @@ function enterPrepStep(idx){
 
   el.phaseTagPrep.textContent = 'Phase ' + (step.phaseIdx+1) + ' · ' + step.phaseName;
   el.illustrationPrep.innerHTML = ICONS[step.icon] || '';
-  el.namePrep.textContent = step.name;
+  el.namePrep.textContent = step.sideLabel && (step.sideLabel === 'links' || step.sideLabel === 'rechts')
+    ? step.name + ' (' + step.sideLabel + ')'
+    : step.name;
   el.howtoTextPrep.textContent = step.howto;
-  el.sideWrapPrep.innerHTML = step.sideLabel ? '<span class="side-label">' + step.sideLabel + '</span>' : '';
+  el.sideWrapPrep.innerHTML = renderSideOrSetBadge(step);
   el.secsPrep.textContent = PREP_SECONDS;
   el.ringPrep.classList.remove('urgent');
   el.ringPrep.style.strokeDashoffset = '0';
