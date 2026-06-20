@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Faszien- & Calisthenics-Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #f6f1e7;
+    --clay: #c97b4a;
+    --moss: #5c6e4f;
+    --ink: #2e2a24;
+    --ink-soft: #6b6457;
+    --line: #ddd3c0;
+    --sand: #ece4d2;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent;}
+
+  html{ -webkit-text-size-adjust: 100%; }
+
+  body{
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    width:100%;
+    overflow-x:hidden;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  .app{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: max(28px, env(safe-area-inset-top)) 20px max(40px, env(safe-area-inset-bottom));
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* ambient wave background, signature element */
+  .waves{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:0.5;
+  }
+  .waves svg{width:100%; height:100%;}
+
+  .header{
+    text-align:center;
+    margin-bottom: 22px;
+    position:relative;
+    z-index:1;
+  }
+  .header .eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--clay);
+    font-weight:600;
+    margin-bottom: 6px;
+  }
+  .header h1{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 28px;
+    line-height:1.15;
+    color: var(--ink);
+  }
+  .header p{
+    margin-top:8px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  /* SCREENS */
+  .screen{ position:relative; z-index:1; }
+  .hidden{ display:none !important; }
+
+  /* --- OVERVIEW SCREEN --- */
+  .phase-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top: 18px;
+  }
+  .phase-card{
+    background: rgba(255,255,255,0.55);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .phase-num{
+    font-family:'Fraunces', Georgia, serif;
+    font-size:20px;
+    color: var(--clay);
+    width: 28px;
+    flex-shrink:0;
+  }
+  .phase-info{flex:1;}
+  .phase-info .name{font-weight:600; font-size:15px;}
+  .phase-info .meta{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+
+  .sound-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background: rgba(255,255,255,0.55);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-top: 14px;
+  }
+  .sound-toggle .label{ font-size:14px; font-weight:600; }
+  .sound-toggle .sublabel{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+  .switch{
+    position:relative;
+    width: 48px;
+    height: 28px;
+    flex-shrink:0;
+  }
+  .switch input{
+    position:absolute;
+    opacity:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    cursor:pointer;
+    z-index:2;
+  }
+  .switch .track{
+    position:absolute;
+    inset:0;
+    background: var(--line);
+    border-radius: 16px;
+    transition: background 0.2s ease;
+  }
+  .switch .thumb{
+    position:absolute;
+    top:3px; left:3px;
+    width:22px; height:22px;
+    background:white;
+    border-radius:50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .switch input:checked ~ .track{ background: var(--moss); }
+  .switch input:checked ~ .thumb{ transform: translateX(20px); }
+
+  button, .start-btn, .ctrl-btn{
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+  }
+
+  .start-btn{
+    display:block;
+    width:100%;
+    margin-top: 18px;
+    padding: 16px;
+    background: var(--clay);
+    color: white;
+    border:none;
+    border-radius: 14px;
+    font-family:'Inter', -apple-system, sans-serif;
+    font-weight:600;
+    font-size:16px;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 6px 16px rgba(201,123,74,0.35);
+  }
+  .start-btn:active{ transform: translateY(0) scale(0.98); }
+  .start-btn:focus-visible{ outline: 3px solid var(--moss); outline-offset: 2px; }
+
+  /* --- WORKOUT SCREEN --- */
+  .progress-track{
+    display:flex;
+    gap:5px;
+    margin-bottom: 22px;
+  }
+  .progress-seg{
+    flex:1;
+    height:5px;
+    border-radius:3px;
+    background: var(--line);
+    overflow:hidden;
+    position:relative;
+  }
+  .progress-seg .fill{
+    position:absolute; left:0; top:0; bottom:0;
+    width:0%;
+    background: var(--clay);
+    transition: width 0.2s linear;
+  }
+  .progress-seg.done .fill{ width:100% !important; background: var(--moss); }
+
+  .phase-tag{
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: var(--moss);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+
+  .exercise-card{
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 26px 22px 22px;
+    text-align:center;
+  }
+
+  .prep-card{
+    border: 1px solid var(--moss);
+    background: rgba(92,110,79,0.07);
+  }
+  .prep-eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--moss);
+    margin-bottom: 10px;
+  }
+  .prep-ring{ stroke: var(--moss); }
+  .prep-ring.urgent{ stroke: #b6543a; }
+
+  .illustration{
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 14px;
+  }
+  .illustration svg{ width:100%; height:100%; display:block; }
+
+  .exercise-name{
+    font-family:'Fraunces', Georgia, serif;
+    font-size: 24px;
+    font-weight:500;
+    margin-bottom:6px;
+  }
+  .exercise-desc{
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height:1.5;
+    max-width: 320px;
+    margin: 0 auto 16px;
+  }
+
+  .side-label{
+    display:inline-block;
+    font-size: 12px;
+    font-weight:600;
+    color: var(--clay);
+    background: rgba(201,123,74,0.12);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  /* Movement how-to box */
+  .howto{
+    background: var(--sand);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 0 auto 18px;
+    max-width: 340px;
+    text-align: left;
+    position: relative;
+  }
+  .howto-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom: 6px;
+  }
+  .howto-label{
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--moss);
+  }
+  .listen-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .listen-btn:active{ transform: scale(0.96); }
+  .listen-btn svg{ width:14px; height:14px; flex-shrink:0; }
+  .listen-btn.speaking{ background: var(--clay); color:white; border-color: var(--clay); }
+  .howto-text{
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  /* timer ring */
+  .timer-wrap{
+    position:relative;
+    width: 180px;
+    height: 180px;
+    margin: 6px auto 18px;
+  }
+  .timer-wrap svg{ width:100%; height:100%; transform: rotate(-90deg); display:block; }
+  .ring-bg{ fill:none; stroke: var(--sand); stroke-width: 9; }
+  .ring-fg{
+    fill:none;
+    stroke: var(--clay);
+    stroke-width: 9;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.2s linear, stroke 0.2s ease;
+  }
+  .ring-fg.urgent{ stroke: #b6543a; }
+  .timer-num{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+  }
+  .timer-num .secs{
+    font-family:'Fraunces', Georgia, serif;
+    font-size: 44px;
+    font-weight:600;
+    line-height:1;
+    transition: color 0.2s ease;
+  }
+  .timer-num .secs.urgent{ color: #b6543a; }
+  .timer-num .unit{
+    font-size:11px;
+    color: var(--ink-soft);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+
+  .controls{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    margin-top: 6px;
+  }
+  .ctrl-btn{
+    border:none;
+    border-radius:12px;
+    padding: 12px 20px;
+    font-family:'Inter', -apple-system, sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition: transform 0.15s ease;
+  }
+  .ctrl-btn:active{ transform: scale(0.97); }
+  .ctrl-btn:focus-visible{ outline: 3px solid var(--moss); outline-offset:2px; }
+  .ctrl-primary{ background: var(--clay); color:white; }
+  .ctrl-secondary{ background: transparent; color: var(--ink-soft); border:1px solid var(--line); }
+
+  .up-next{
+    margin-top: 22px;
+    text-align:center;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .up-next b{ color: var(--ink); font-weight:600; }
+
+  /* --- DONE SCREEN --- */
+  .done-screen{
+    text-align:center;
+    padding-top: 30px;
+  }
+  .done-screen .check{
+    width:84px; height:84px; margin:0 auto 18px;
+  }
+  .done-screen h2{
+    font-family:'Fraunces', Georgia, serif;
+    font-size: 28px;
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  .done-screen p{
+    color: var(--ink-soft);
+    font-size:15px;
+    max-width:320px;
+    margin: 0 auto 26px;
+    line-height:1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="waves" aria-hidden="true">
+  <svg viewBox="0 0 640 900" preserveAspectRatio="none">
+    <path d="M0,120 C160,60 320,180 480,110 C560,75 600,90 640,80" fill="none" stroke="#c97b4a" stroke-width="2" opacity="0.25"/>
+    <path d="M0,780 C180,840 340,720 500,800 C580,840 600,810 640,820" fill="none" stroke="#5c6e4f" stroke-width="2" opacity="0.22"/>
+    <path d="M0,420 C200,380 280,470 480,430 C560,415 600,440 640,420" fill="none" stroke="#c97b4a" stroke-width="1.5" opacity="0.15"/>
+  </svg>
+</div>
+
+<div class="app">
+
+  <!-- OVERVIEW -->
+  <div class="screen" id="screen-overview">
+    <div class="header">
+      <div class="eyebrow">Heute · 7–12 Minuten</div>
+      <h1>Faszien- &amp; Calisthenics-Flow</h1>
+      <p>Faszien lösen · Core aktivieren · Beweglichkeit steigern</p>
+    </div>
+
+    <div class="phase-list" id="phase-list"></div>
+
+    <div class="sound-toggle">
+      <div>
+        <div class="label">Ton &amp; Vorlesen</div>
+        <div class="sublabel">Signal bei den letzten 5 Sekunden, Vorlesen optional pro Übung</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="sound-checkbox" checked>
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+
+    <button class="start-btn" id="btn-start">Training starten</button>
+  </div>
+
+  <!-- PREP / TRANSITION (30 Sekunden Vorbereitung vor jeder Übung) -->
+  <div class="screen hidden" id="screen-prep">
+    <div class="progress-track" id="progress-track-prep"></div>
+    <div class="phase-tag" id="phase-tag-prep">Vorbereitung</div>
+
+    <div class="exercise-card prep-card">
+      <div class="prep-eyebrow">Bereite dich vor auf</div>
+      <div class="illustration" id="illustration-prep"></div>
+      <div id="side-label-wrap-prep"></div>
+      <h2 class="exercise-name" id="exercise-name-prep">Übung</h2>
+
+      <div class="howto">
+        <div class="howto-head">
+          <span class="howto-label">Bewegungsablauf</span>
+          <button class="listen-btn" id="btn-listen-prep" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <span id="listen-label-prep">Vorlesen</span>
+          </button>
+        </div>
+        <p class="howto-text" id="howto-text-prep">Ablaufbeschreibung</p>
+      </div>
+
+      <div class="timer-wrap prep-timer">
+        <svg viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="44"></circle>
+          <circle class="ring-fg prep-ring" id="ring-fg-prep" cx="50" cy="50" r="44"
+                  stroke-dasharray="276.46" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-num">
+          <div class="secs" id="timer-secs-prep">30</div>
+          <div class="unit">bis Start</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl-btn ctrl-secondary" id="btn-prep-skip" type="button">Direkt starten</button>
+        <button class="ctrl-btn ctrl-primary" id="btn-prep-pause" type="button">Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="screen hidden" id="screen-workout">
+    <div class="progress-track" id="progress-track"></div>
+    <div class="phase-tag" id="phase-tag">Phase</div>
+
+    <div class="exercise-card">
+      <div class="illustration" id="illustration"></div>
+      <div id="side-label-wrap"></div>
+      <h2 class="exercise-name" id="exercise-name">Übung</h2>
+      <p class="exercise-desc" id="exercise-desc">Beschreibung</p>
+
+      <div class="howto">
+        <div class="howto-head">
+          <span class="howto-label">Bewegungsablauf</span>
+          <button class="listen-btn" id="btn-listen" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <span id="listen-label">Vorlesen</span>
+          </button>
+        </div>
+        <p class="howto-text" id="howto-text">Ablaufbeschreibung</p>
+      </div>
+
+      <div class="timer-wrap">
+        <svg viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="44"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="50" cy="50" r="44"
+                  stroke-dasharray="276.46" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-num">
+          <div class="secs" id="timer-secs">40</div>
+          <div class="unit">Sekunden</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl-btn ctrl-secondary" id="btn-prev" type="button">Zurück</button>
+        <button class="ctrl-btn ctrl-primary" id="btn-pause" type="button">Pause</button>
+        <button class="ctrl-btn ctrl-secondary" id="btn-next" type="button">Weiter</button>
+      </div>
+    </div>
+
+    <div class="up-next" id="up-next"></div>
+  </div>
+
+  <!-- DONE -->
+  <div class="screen hidden" id="screen-done">
+    <div class="done-screen">
+      <div class="check">
+        <svg viewBox="0 0 84 84">
+          <circle cx="42" cy="42" r="40" fill="none" stroke="#5c6e4f" stroke-width="3"/>
+          <path d="M26 43 L37 54 L58 30" fill="none" stroke="#5c6e4f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>Geschafft.</h2>
+      <p>Faszien gelöst, Core aktiviert, Energie freigesetzt. Komm morgen wieder.</p>
+      <button class="start-btn" id="btn-restart" style="max-width:260px; margin:0 auto;" type="button">Noch einmal</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- ILLUSTRATIONS (simple line-art SVGs) ---------- */
+var ICONS = {
+catcow: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><ellipse cx="50" cy="58" rx="28" ry="6" fill="none" stroke="#2e2a24" stroke-width="2.5"/><path d="M22 58 Q35 40 50 50 Q65 60 78 58" fill="none" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><circle cx="22" cy="58" r="4" fill="#2e2a24"/><circle cx="78" cy="58" r="4" fill="#2e2a24"/><line x1="50" y1="50" x2="50" y2="38" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><circle cx="50" cy="33" r="6" fill="#2e2a24"/><line x1="35" y1="63" x2="30" y2="78" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><line x1="65" y1="63" x2="70" y2="78" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/></svg>',
+
+sidebend: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><circle cx="48" cy="22" r="7" fill="#2e2a24"/><path d="M48 29 Q60 45 64 65" fill="none" stroke="#c97b4a" stroke-width="4" stroke-linecap="round"/><line x1="50" y1="65" x2="44" y2="85" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="58" y1="65" x2="64" y2="85" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><path d="M48 35 Q30 45 25 30" fill="none" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><path d="M62 50 Q78 55 80 70" fill="none" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/></svg>',
+
+hipcircle: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><circle cx="50" cy="25" r="7" fill="#2e2a24"/><line x1="50" y1="32" x2="50" y2="60" stroke="#2e2a24" stroke-width="4" stroke-linecap="round"/><ellipse cx="50" cy="62" rx="16" ry="6" fill="none" stroke="#c97b4a" stroke-width="3" stroke-dasharray="4 4"/><line x1="44" y1="65" x2="38" y2="85" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="56" y1="65" x2="62" y2="85" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="50" y1="38" x2="34" y2="45" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><line x1="50" y1="38" x2="66" y2="45" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/></svg>',
+
+deadbug: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><ellipse cx="50" cy="58" rx="26" ry="7" fill="none" stroke="#2e2a24" stroke-width="2.5"/><circle cx="22" cy="58" r="6" fill="#2e2a24"/><line x1="28" y1="52" x2="42" y2="30" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><line x1="42" y1="30" x2="58" y2="30" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><line x1="60" y1="55" x2="78" y2="70" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><line x1="78" y1="70" x2="90" y2="62" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><line x1="65" y1="60" x2="58" y2="80" stroke="#2e2a24" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 3"/></svg>',
+
+sideplank: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><line x1="20" y1="68" x2="80" y2="50" stroke="#2e2a24" stroke-width="4" stroke-linecap="round"/><circle cx="20" cy="68" r="7" fill="#2e2a24"/><line x1="26" y1="65" x2="34" y2="80" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="50" y1="59" x2="48" y2="80" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><line x1="60" y1="56" x2="70" y2="40" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/></svg>',
+
+glutebridge: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><line x1="20" y1="70" x2="42" y2="70" stroke="#2e2a24" stroke-width="4" stroke-linecap="round"/><path d="M42 70 Q58 45 72 58" fill="none" stroke="#c97b4a" stroke-width="4" stroke-linecap="round"/><line x1="72" y1="58" x2="80" y2="74" stroke="#2e2a24" stroke-width="4" stroke-linecap="round"/><circle cx="18" cy="70" r="6" fill="#2e2a24"/><line x1="80" y1="74" x2="84" y2="58" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/></svg>',
+
+hipflexor: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><circle cx="42" cy="28" r="6.5" fill="#2e2a24"/><line x1="42" y1="34" x2="44" y2="55" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="44" y1="55" x2="32" y2="78" stroke="#c97b4a" stroke-width="4" stroke-linecap="round"/><line x1="44" y1="55" x2="62" y2="60" stroke="#c97b4a" stroke-width="4" stroke-linecap="round"/><line x1="62" y1="60" x2="60" y2="80" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="42" y1="40" x2="58" y2="35" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/></svg>',
+
+hamstring: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><circle cx="30" cy="30" r="6.5" fill="#2e2a24"/><path d="M30 36 Q40 55 62 58" fill="none" stroke="#2e2a24" stroke-width="3.5" stroke-linecap="round"/><line x1="62" y1="58" x2="78" y2="30" stroke="#c97b4a" stroke-width="4" stroke-linecap="round"/><line x1="32" y1="40" x2="20" y2="55" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/></svg>',
+
+rolldown: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ece4d2"/><circle cx="50" cy="26" r="6.5" fill="#2e2a24"/><path d="M50 32 Q46 50 50 60 Q54 70 50 80" fill="none" stroke="#c97b4a" stroke-width="3.5" stroke-linecap="round"/><line x1="44" y1="40" x2="34" y2="52" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><line x1="56" y1="40" x2="66" y2="52" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><line x1="46" y1="80" x2="42" y2="92" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/><line x1="54" y1="80" x2="58" y2="92" stroke="#2e2a24" stroke-width="3" stroke-linecap="round"/></svg>'
+};
+
+/* ---------- WORKOUT DATA (from the uploaded plan) ----------
+   howto: kurze, klare Schritt-für-Schritt-Beschreibung des Bewegungsablaufs,
+   geschrieben für lautes Vorlesen (kurze Sätze, aktive Verben). */
+var phases = [
+  {
+    name: "Faszien-Release",
+    items: [
+      { name:"Cat-Cow", desc:"Wellenbewegung für Wirbelsäule & Brustkorb.", time:40, icon:"catcow",
+        howto:"Geh in den Vierfüßlerstand, Hände unter den Schultern, Knie unter der Hüfte. Atme ein, senke den Bauch, hebe Brustbein und Kopf leicht an. Atme aus, runde den Rücken wie eine Katze, Kinn zur Brust. Bewege dich langsam und fließend zwischen beiden Positionen." },
+      { name:"Seitbeuge im Stand", desc:"Öffnet seitliche Faszienketten.", time:30, icon:"sidebend", sides:2,
+        howto:"Stell dich hüftbreit hin, hebe einen Arm über den Kopf. Beuge den Oberkörper langsam zur Gegenseite, als würdest du über eine Linie greifen. Halte die Hüfte stabil und spüre die Dehnung an der Seite. Wechsle danach die Seite." },
+      { name:"Hüftkreisen", desc:"Mobilisiert Hüfte & LWS.", time:40, icon:"hipcircle",
+        howto:"Stell die Füße hüftbreit auf, Hände locker an der Hüfte. Kreise das Becken großzügig in eine Richtung, dann in die andere. Halte Oberkörper und Knie möglichst ruhig, die Bewegung kommt aus der Hüfte." }
+    ]
+  },
+  {
+    name: "Core-Aktivierung",
+    items: [
+      { name:"Dead Bug", desc:"Tiefer Core, Anti-Rotation.", time:20, sets:3, icon:"deadbug",
+        howto:"Lege dich auf den Rücken, Arme zeigen zur Decke, Knie im rechten Winkel über der Hüfte. Strecke einen Arm und das gegenüberliegende Bein langsam aus, ohne dass der untere Rücken sich vom Boden hebt. Führe beide zurück und wechsle die Seite." },
+      { name:"Seitstütz Knievariante", desc:"Schräge Bauchmuskeln & laterale Faszien.", time:25, icon:"sideplank", sides:2,
+        howto:"Lege dich auf die Seite, stütze dich auf den Unterarm, die Knie sind angewinkelt. Hebe die Hüfte vom Boden, sodass Schulter, Hüfte und Knie eine gerade Linie bilden. Halte die Position ruhig und atme gleichmäßig. Dann die Seite wechseln." },
+      { name:"Glute Bridge", desc:"Hüftbeuger öffnen, Gesäß aktivieren.", time:30, icon:"glutebridge",
+        howto:"Lege dich auf den Rücken, Füße hüftbreit aufgestellt, nah am Gesäß. Drücke die Fersen in den Boden und hebe die Hüfte nach oben, bis Oberkörper und Oberschenkel eine Linie bilden. Spanne dabei das Gesäß an. Senke die Hüfte langsam wieder ab." }
+    ]
+  },
+  {
+    name: "Faszien-Dehnung",
+    items: [
+      { name:"Hüftbeuger-Stretch", desc:"Entlastet vordere Faszienlinie.", time:45, icon:"hipflexor", sides:2,
+        howto:"Geh in einen tiefen Ausfallschritt, das hintere Knie sinkt Richtung Boden. Schiebe das Becken sanft nach vorne, ohne den unteren Rücken durchzudrücken. Spüre die Dehnung in der Hüfte des hinteren Beins. Halte ruhig und wechsle danach die Seite." },
+      { name:"Beinrückseiten-Dehnung", desc:"Löst dorsale Kette.", time:45, icon:"hamstring",
+        howto:"Stell ein Bein leicht nach vorne, das Knie bleibt locker, nicht durchgestreckt. Beuge dich aus der Hüfte langsam nach vorne, der Rücken bleibt lang. Spüre die Dehnung in der Rückseite des vorderen Beins, ohne ins Federn zu kommen." }
+    ]
+  },
+  {
+    name: "Abschluss-Flow",
+    items: [
+      { name:"Standing Roll Down", desc:"Wirbel-für-Wirbel lösen.", time:60, icon:"rolldown",
+        howto:"Stell dich aufrecht hin, Füße hüftbreit. Lass das Kinn langsam zur Brust sinken und rolle Wirbel für Wirbel nach unten ab, bis die Arme locker hängen. Bleib einen Moment hängen, dann rolle dich genauso langsam wieder zur aufrechten Position hoch." }
+    ]
+  }
+];
+
+/* ---------- Flatten into a single step sequence (handling sides/sets) ---------- */
+var steps = [];
+phases.forEach(function(phase, pIdx){
+  phase.items.forEach(function(item){
+    if(item.sides){
+      for(var s=1; s<=item.sides; s++){
+        steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel: s===1?"Seite 1":"Seite 2"}));
+      }
+    } else if(item.sets){
+      for(var s2=1; s2<=item.sets; s2++){
+        steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel: "Satz " + s2 + " / " + item.sets}));
+      }
+    } else {
+      steps.push(Object.assign({}, item, {phaseIdx:pIdx, phaseName:phase.name, sideLabel:null}));
+    }
+  });
+});
+
+/* ---------- Build overview list ---------- */
+var phaseListEl = document.getElementById('phase-list');
+phases.forEach(function(p, i){
+  var totalSec = p.items.reduce(function(sum, it){ return sum + it.time * (it.sides || it.sets || 1); }, 0);
+  var div = document.createElement('div');
+  div.className = 'phase-card';
+  div.innerHTML =
+    '<div class="phase-num">' + (i+1) + '</div>' +
+    '<div class="phase-info">' +
+      '<div class="name">' + p.name + '</div>' +
+      '<div class="meta">' + p.items.map(function(it){ return it.name; }).join(' · ') + ' — ca. ' + (Math.round(totalSec/60*10)/10) + ' Min</div>' +
+    '</div>';
+  phaseListEl.appendChild(div);
+});
+
+/* ---------- Build progress segments (one per phase) ---------- */
+var progressTrack = document.getElementById('progress-track');
+var progressTrackPrep = document.getElementById('progress-track-prep');
+[progressTrack, progressTrackPrep].forEach(function(track){
+  phases.forEach(function(){
+    var seg = document.createElement('div');
+    seg.className = 'progress-seg';
+    seg.innerHTML = '<div class="fill"></div>';
+    track.appendChild(seg);
+  });
+});
+function segFills(track){ return (track||progressTrack).querySelectorAll('.progress-seg .fill'); }
+function segEls(track){ return (track||progressTrack).querySelectorAll('.progress-seg'); }
+
+/* ---------- State ---------- */
+var currentStep = 0;
+var remaining = 0;
+var paused = false;
+var soundEnabled = true;
+var RING_CIRC = 276.46;
+var rafId = null;
+var lastTickTime = null;
+var beepedThisSecond = {}; // guards against double-beep per second
+
+var el = {
+  overview: document.getElementById('screen-overview'),
+  workout: document.getElementById('screen-workout'),
+  prep: document.getElementById('screen-prep'),
+  done: document.getElementById('screen-done'),
+  phaseTag: document.getElementById('phase-tag'),
+  illustration: document.getElementById('illustration'),
+  sideWrap: document.getElementById('side-label-wrap'),
+  name: document.getElementById('exercise-name'),
+  desc: document.getElementById('exercise-desc'),
+  howtoText: document.getElementById('howto-text'),
+  secs: document.getElementById('timer-secs'),
+  ring: document.getElementById('ring-fg'),
+  pauseBtn: document.getElementById('btn-pause'),
+  upNext: document.getElementById('up-next'),
+  listenBtn: document.getElementById('btn-listen'),
+  listenLabel: document.getElementById('listen-label'),
+  soundCheckbox: document.getElementById('sound-checkbox'),
+  // prep screen
+  phaseTagPrep: document.getElementById('phase-tag-prep'),
+  illustrationPrep: document.getElementById('illustration-prep'),
+  sideWrapPrep: document.getElementById('side-label-wrap-prep'),
+  namePrep: document.getElementById('exercise-name-prep'),
+  howtoTextPrep: document.getElementById('howto-text-prep'),
+  secsPrep: document.getElementById('timer-secs-prep'),
+  ringPrep: document.getElementById('ring-fg-prep'),
+  pauseBtnPrep: document.getElementById('btn-prep-pause'),
+  skipBtnPrep: document.getElementById('btn-prep-skip'),
+  listenBtnPrep: document.getElementById('btn-listen-prep'),
+  listenLabelPrep: document.getElementById('listen-label-prep')
+};
+
+/* ---------- AUDIO (Web Audio API, iOS-safe) ---------- */
+var audioCtx = null;
+function ensureAudioCtx(){
+  if(!audioCtx){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(AC){ audioCtx = new AC(); }
+  }
+  if(audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+function beep(freq, duration, when, gainPeak){
+  var ctx = ensureAudioCtx();
+  if(!ctx) return;
+  var t = ctx.currentTime + (when || 0);
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(gainPeak || 0.18, t + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + duration + 0.02);
+}
+function playCountdownTick(secondsLeft){
+  if(!soundEnabled) return;
+  // Countdown während der ÜBUNG (absteigender Charakter): kurze hohe Klicks,
+  // am Ende ein deutlich längerer, klar erkennbarer Abschluss-Ton (zwei sanft fallende Töne).
+  if(secondsLeft === 0){
+    beep(660, 0.30, 0, 0.22);
+    beep(440, 0.55, 0.22, 0.20);
+  } else {
+    beep(880, 0.12, 0, 0.16);
+  }
+}
+function playPrepTick(secondsLeft){
+  if(!soundEnabled) return;
+  // Countdown während der VORBEREITUNG (aufsteigender Charakter, anderer Klang):
+  // tiefere, weichere Klicks, die zum Start hin ansteigen — bewusst anders als das Übungsende.
+  if(secondsLeft === 0){
+    beep(523, 0.22, 0, 0.20);
+    beep(784, 0.30, 0.18, 0.20);
+  } else {
+    beep(392, 0.14, 0, 0.14);
+  }
+}
+
+/* ---------- SPEECH SYNTHESIS (Vorlesen) ---------- */
+var speaking = false;
+var speakingBtn = null;
+function stopSpeaking(){
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+  }
+  speaking = false;
+  el.listenBtn.classList.remove('speaking');
+  el.listenLabel.textContent = 'Vorlesen';
+  el.listenBtnPrep.classList.remove('speaking');
+  el.listenLabelPrep.textContent = 'Vorlesen';
+  speakingBtn = null;
+}
+function speakHowto(btn, label, step){
+  if(!('speechSynthesis' in window)){
+    alert('Vorlesen wird von diesem Browser leider nicht unterstützt.');
+    return;
+  }
+  if(speaking && speakingBtn === btn){
+    stopSpeaking();
+    return;
+  }
+  var text = step.name + '. ' + step.howto;
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'de-DE';
+  utt.rate = 0.95;
+  utt.onend = function(){ stopSpeaking(); };
+  utt.onerror = function(){ stopSpeaking(); };
+  window.speechSynthesis.cancel(); // clear any queued utterances first
+  window.speechSynthesis.speak(utt);
+  speaking = true;
+  speakingBtn = btn;
+  btn.classList.add('speaking');
+  label.textContent = 'Stopp';
+}
+
+/* ---------- Step loading (Übungsphase) ---------- */
+function loadStep(idx){
+  cancelTimer();
+  stopSpeaking();
+  paused = false;
+  el.pauseBtn.textContent = 'Pause';
+  var step = steps[idx];
+  remaining = step.time;
+  beepedThisSecond = {};
+
+  el.phaseTag.textContent = 'Phase ' + (step.phaseIdx+1) + ' · ' + step.phaseName;
+  el.illustration.innerHTML = ICONS[step.icon] || '';
+  el.name.textContent = step.name;
+  el.desc.textContent = step.desc;
+  el.howtoText.textContent = step.howto;
+  el.sideWrap.innerHTML = step.sideLabel ? '<span class="side-label">' + step.sideLabel + '</span>' : '';
+  el.secs.textContent = remaining;
+  el.secs.classList.remove('urgent');
+  el.ring.classList.remove('urgent');
+  el.ring.style.strokeDashoffset = '0';
+
+  updateProgressBars(idx);
+
+  // up next text
+  if(idx+1 < steps.length){
+    var next = steps[idx+1];
+    el.upNext.innerHTML = 'Als Nächstes: <b>' + next.name + '</b>' + (next.sideLabel ? ' · ' + next.sideLabel : '');
+  } else {
+    el.upNext.innerHTML = 'Letzte Übung — danach bist du fertig.';
+  }
+
+  startTimer();
+}
+
+function updateProgressBars(idx){
+  var step = steps[idx];
+  [{track:progressTrack}, {track:progressTrackPrep}].forEach(function(o){
+    var fills = segFills(o.track);
+    var segs = segEls(o.track);
+    for(var i=0;i<segs.length;i++){ segs[i].classList.toggle('done', i < step.phaseIdx); }
+    for(var j=0;j<fills.length;j++){ if(j !== step.phaseIdx){ fills[j].style.width = j < step.phaseIdx ? '100%' : '0%'; } }
+    var itemsInPhase = steps.filter(function(s){ return s.phaseIdx === step.phaseIdx; }).length;
+    var posInPhase = steps.slice(0, idx+1).filter(function(s){ return s.phaseIdx === step.phaseIdx; }).length;
+    fills[step.phaseIdx].style.width = (posInPhase/itemsInPhase*100) + '%';
+  });
+}
+
+/* ---------- Timer: requestAnimationFrame-based, robust against iOS throttling ---------- */
+var PREP_SECONDS = 30;
+var mode = 'workout'; // 'workout' | 'prep'
+
+function startTimer(){
+  mode = 'workout';
+  cancelTimer();
+  lastTickTime = performance.now();
+  var step = steps[currentStep];
+  var totalMs = step.time * 1000;
+  var elapsedMs = 0;
+
+  function frame(now){
+    if(paused){
+      lastTickTime = now;
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
+    var delta = now - lastTickTime;
+    lastTickTime = now;
+    elapsedMs += delta;
+
+    var remMs = Math.max(0, totalMs - elapsedMs);
+    var remSecCeil = Math.ceil(remMs / 1000);
+
+    if(remSecCeil !== remaining){
+      remaining = remSecCeil;
+      el.secs.textContent = remaining;
+      var urgent = remaining > 0 && remaining <= 5;
+      el.secs.classList.toggle('urgent', urgent);
+      el.ring.classList.toggle('urgent', urgent);
+      if(remaining <= 5 && remaining >= 0 && !beepedThisSecond[remaining]){
+        beepedThisSecond[remaining] = true;
+        if(remaining > 0) playCountdownTick(remaining);
+      }
+    }
+
+    var frac = remMs / totalMs;
+    el.ring.style.strokeDashoffset = (RING_CIRC * (1-frac)).toFixed(2);
+
+    if(remMs <= 0){
+      playCountdownTick(0);
+      cancelTimer();
+      goToPrepOrFinish();
+      return;
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+  rafId = requestAnimationFrame(frame);
+}
+
+function startPrepTimer(){
+  mode = 'prep';
+  cancelTimer();
+  stopSpeaking();
+  lastTickTime = performance.now();
+  var totalMs = PREP_SECONDS * 1000;
+  var elapsedMs = 0;
+  var prepBeeped = {};
+  var nextStep = steps[currentStep];
+
+  function frame(now){
+    if(paused){
+      lastTickTime = now;
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
+    var delta = now - lastTickTime;
+    lastTickTime = now;
+    elapsedMs += delta;
+
+    var remMs = Math.max(0, totalMs - elapsedMs);
+    var remSecCeil = Math.ceil(remMs / 1000);
+    var remainingPrep = remSecCeil;
+
+    if(remainingPrep !== parseInt(el.secsPrep.textContent, 10)){
+      el.secsPrep.textContent = remainingPrep;
+      var urgent = remainingPrep > 0 && remainingPrep <= 5;
+      el.ringPrep.classList.toggle('urgent', urgent);
+      if(remainingPrep <= 5 && remainingPrep >= 0 && !prepBeeped[remainingPrep]){
+        prepBeeped[remainingPrep] = true;
+        if(remainingPrep > 0) playPrepTick(remainingPrep);
+      }
+    }
+
+    var frac = remMs / totalMs;
+    el.ringPrep.style.strokeDashoffset = (RING_CIRC * (1-frac)).toFixed(2);
+
+    if(remMs <= 0){
+      playPrepTick(0);
+      cancelTimer();
+      enterWorkoutStep(currentStep);
+      return;
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+  rafId = requestAnimationFrame(frame);
+}
+
+function cancelTimer(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+}
+
+function goToPrepOrFinish(){
+  if(currentStep < steps.length - 1){
+    currentStep++;
+    enterPrepStep(currentStep);
+  } else {
+    finishWorkout();
+  }
+}
+
+function enterPrepStep(idx){
+  var step = steps[idx];
+  paused = false;
+  el.pauseBtnPrep.textContent = 'Pause';
+
+  el.phaseTagPrep.textContent = 'Phase ' + (step.phaseIdx+1) + ' · ' + step.phaseName;
+  el.illustrationPrep.innerHTML = ICONS[step.icon] || '';
+  el.namePrep.textContent = step.name;
+  el.howtoTextPrep.textContent = step.howto;
+  el.sideWrapPrep.innerHTML = step.sideLabel ? '<span class="side-label">' + step.sideLabel + '</span>' : '';
+  el.secsPrep.textContent = PREP_SECONDS;
+  el.ringPrep.classList.remove('urgent');
+  el.ringPrep.style.strokeDashoffset = '0';
+
+  updateProgressBars(idx);
+
+  el.workout.classList.add('hidden');
+  el.prep.classList.remove('hidden');
+  startPrepTimer();
+}
+
+function enterWorkoutStep(idx){
+  el.prep.classList.add('hidden');
+  el.workout.classList.remove('hidden');
+  loadStep(idx);
+}
+
+function goNext(){
+  // "Weiter" während einer laufenden Übung: zur Vorbereitung der nächsten Übung springen
+  goToPrepOrFinish();
+}
+function goPrev(){
+  if(currentStep > 0){
+    currentStep--;
+    enterWorkoutStep(currentStep);
+  }
+}
+function togglePause(){
+  paused = !paused;
+  var label = paused ? 'Weiter' : 'Pause';
+  el.pauseBtn.textContent = label;
+  el.pauseBtnPrep.textContent = label;
+  if(paused) stopSpeaking();
+}
+function finishWorkout(){
+  cancelTimer();
+  stopSpeaking();
+  el.workout.classList.add('hidden');
+  el.prep.classList.add('hidden');
+  el.done.classList.remove('hidden');
+}
+function startWorkout(){
+  ensureAudioCtx(); // unlock audio on user gesture (required by iOS Safari)
+  currentStep = 0;
+  el.overview.classList.add('hidden');
+  el.done.classList.add('hidden');
+  el.prep.classList.add('hidden');
+  el.workout.classList.remove('hidden');
+  loadStep(0);
+}
+function restart(){
+  el.done.classList.add('hidden');
+  el.overview.classList.remove('hidden');
+}
+
+el.soundCheckbox.addEventListener('change', function(){
+  soundEnabled = el.soundCheckbox.checked;
+  ensureAudioCtx();
+});
+
+document.getElementById('btn-start').addEventListener('click', startWorkout);
+document.getElementById('btn-restart').addEventListener('click', restart);
+document.getElementById('btn-next').addEventListener('click', function(){ ensureAudioCtx(); goNext(); });
+document.getElementById('btn-prev').addEventListener('click', function(){ ensureAudioCtx(); goPrev(); });
+document.getElementById('btn-pause').addEventListener('click', function(){ ensureAudioCtx(); togglePause(); });
+el.listenBtn.addEventListener('click', function(){ ensureAudioCtx(); speakHowto(el.listenBtn, el.listenLabel, steps[currentStep]); });
+
+el.skipBtnPrep.addEventListener('click', function(){
+  ensureAudioCtx();
+  cancelTimer();
+  stopSpeaking();
+  enterWorkoutStep(currentStep);
+});
+el.pauseBtnPrep.addEventListener('click', function(){ ensureAudioCtx(); togglePause(); });
+el.listenBtnPrep.addEventListener('click', function(){ ensureAudioCtx(); speakHowto(el.listenBtnPrep, el.listenLabelPrep, steps[currentStep]); });
+
+// Pause timer correctly when tab/app goes to background, resume cleanly
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && rafId){
+    lastTickTime = performance.now();
+  }
+});
+
+})();
+</script>
+</body>
+</html>
