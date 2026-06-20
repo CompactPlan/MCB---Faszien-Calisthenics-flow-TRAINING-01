@@ -803,6 +803,16 @@ phases.forEach(function(phase, pIdx){
   });
 });
 
+/* ---------- Hilfsfunktion: Sekunden in eine grobe Minuten-Spanne umwandeln ---------- */
+function formatMinRange(totalSec){
+  var min = totalSec / 60;
+  var lo = Math.floor(min);
+  var hi = Math.ceil(min);
+  if(lo < 1) lo = 1;
+  if(hi < 1) hi = 1;
+  return lo === hi ? String(lo) : (lo + '-' + hi);
+}
+
 /* ---------- Build overview list ---------- */
 var phaseListEl = document.getElementById('phase-list');
 phases.forEach(function(p, i){
@@ -813,7 +823,7 @@ phases.forEach(function(p, i){
     '<div class="phase-num">' + (i+1) + '</div>' +
     '<div class="phase-info">' +
       '<div class="name">' + p.name + '</div>' +
-      '<div class="meta">' + p.items.map(function(it){ return it.name; }).join(' · ') + ' — ca. ' + (Math.round(totalSec/60*10)/10) + ' Min</div>' +
+      '<div class="meta">' + p.items.map(function(it){ return it.name; }).join(' · ') + ' — ca. ' + formatMinRange(totalSec) + ' Min</div>' +
     '</div>';
   phaseListEl.appendChild(div);
 });
@@ -1035,7 +1045,9 @@ function updateProgressBars(idx){
 }
 
 /* ---------- Timer: requestAnimationFrame-based, robust against iOS throttling ---------- */
-var PREP_SECONDS = 30;
+var PREP_SECONDS_FULL = 30;
+var PREP_SECONDS_SHORT = 10;
+function getPrepSeconds(){ return prepEnabled ? PREP_SECONDS_FULL : PREP_SECONDS_SHORT; }
 var mode = 'workout'; // 'workout' | 'prep'
 
 function startTimer(){
@@ -1090,7 +1102,7 @@ function startPrepTimer(){
   cancelTimer();
   stopSpeaking();
   lastTickTime = performance.now();
-  var totalMs = PREP_SECONDS * 1000;
+  var totalMs = getPrepSeconds() * 1000;
   var elapsedMs = 0;
   var prepBeeped = {};
   var nextStep = steps[currentStep];
@@ -1140,11 +1152,7 @@ function cancelTimer(){
 function goToPrepOrFinish(){
   if(currentStep < steps.length - 1){
     currentStep++;
-    if(prepEnabled){
-      enterPrepStep(currentStep);
-    } else {
-      enterWorkoutStep(currentStep);
-    }
+    enterPrepStep(currentStep);
   } else {
     finishWorkout();
   }
@@ -1162,7 +1170,7 @@ function enterPrepStep(idx){
     : step.name;
   el.howtoTextPrep.textContent = step.howto;
   el.sideWrapPrep.innerHTML = renderSideOrSetBadge(step);
-  el.secsPrep.textContent = PREP_SECONDS;
+  el.secsPrep.textContent = getPrepSeconds();
   el.ringPrep.classList.remove('urgent');
   el.ringPrep.style.strokeDashoffset = '0';
 
@@ -1208,14 +1216,8 @@ function startWorkout(){
   currentStep = 0;
   el.overview.classList.add('hidden');
   el.done.classList.add('hidden');
-  if(prepEnabled){
-    el.workout.classList.add('hidden');
-    enterPrepStep(0);
-  } else {
-    el.prep.classList.add('hidden');
-    el.workout.classList.remove('hidden');
-    loadStep(0);
-  }
+  el.workout.classList.add('hidden');
+  enterPrepStep(0);
 }
 function restart(){
   el.done.classList.add('hidden');
