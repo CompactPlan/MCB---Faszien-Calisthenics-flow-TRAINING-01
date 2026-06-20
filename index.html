@@ -553,6 +553,18 @@
       </label>
     </div>
 
+    <div class="sound-toggle">
+      <div>
+        <div class="label">30-Sek-Pause zwischen Übungen</div>
+        <div class="sublabel">Aus = Übungen starten direkt nacheinander, ohne Wartezeit</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="prep-checkbox" checked>
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+
     <button class="start-btn" id="btn-start">Training starten</button>
   </div>
 
@@ -799,6 +811,7 @@ var currentStep = 0;
 var remaining = 0;
 var paused = false;
 var soundEnabled = true;
+var prepEnabled = true;
 var RING_CIRC = 276.46;
 var rafId = null;
 var lastTickTime = null;
@@ -822,6 +835,7 @@ var el = {
   listenBtn: document.getElementById('btn-listen'),
   listenLabel: document.getElementById('listen-label'),
   soundCheckbox: document.getElementById('sound-checkbox'),
+  prepCheckbox: document.getElementById('prep-checkbox'),
   // prep screen
   phaseTagPrep: document.getElementById('phase-tag-prep'),
   illustrationPrep: document.getElementById('illustration-prep'),
@@ -1097,7 +1111,11 @@ function cancelTimer(){
 function goToPrepOrFinish(){
   if(currentStep < steps.length - 1){
     currentStep++;
-    enterPrepStep(currentStep);
+    if(prepEnabled){
+      enterPrepStep(currentStep);
+    } else {
+      enterWorkoutStep(currentStep);
+    }
   } else {
     finishWorkout();
   }
@@ -1195,6 +1213,9 @@ function confirmExit(){
 el.soundCheckbox.addEventListener('change', function(){
   soundEnabled = el.soundCheckbox.checked;
   ensureAudioCtx();
+});
+el.prepCheckbox.addEventListener('change', function(){
+  prepEnabled = el.prepCheckbox.checked;
 });
 
 document.getElementById('btn-start').addEventListener('click', startWorkout);
